@@ -1,0 +1,108 @@
+---
+title: "Massachusetts Bay Transportation Authority Ridership Data Cleaning"
+author: "Surabhi Chouhan"
+date: "January 11, 2017"
+output:
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Import packages
+```{r}
+library("readxl")
+library("tidyr")
+library("ggplot2")
+```
+
+
+```{r, echo=FALSE}
+mbta <- read_excel("D:/Surabhi docs/portfolio/data cleaning/mbta.xlsx", skip=1)
+str(mbta)
+head(mbta)
+summary(mbta)
+```
+
+##Now time for some data cleaning
+```{r, echo=FALSE}
+mbta2 <- mbta[c(-1,-7,-11),]
+
+mbta3 <- mbta2[,-1]
+```
+
+##In this data, most typical problem of messy data can be seen, that is, "variables are stored in rows instead of columns", so firstly to correct that-
+```{r, echo=FALSE}
+mbta4 <- gather(mbta3, month, thousand_riders, -mode)
+head(mbta4)
+```
+
+##The column "thousand_riders" showing the average weekday number of riders, is a character vector so first step will be to coerce it into numeric values to make further calculations easy
+```{r, echo=FALSE}
+mbta4$thousand_riders <- as.numeric(mbta4$thousand_riders)
+head(mbta4)
+```
+
+##Second basic symptomof messy data is, variables stored as rows, so to make this right we have to spread the variables into columns
+```{r, echo=FALSE}
+mbta5 <- spread(mbta4, mode, thousand_riders)
+head(mbta5)
+```
+
+##Divide the month column containing month-year data together into "Month and "Year" column separately
+```{r, echo=FALSE}
+mbta6 <- separate(mbta5, month, c("Year", "Month"), sep="-")
+head(mbta6)
+```
+
+##Before the data as "clean", let's look for any obvious mistakes or outliers in the data
+```{r, echo=FALSE}
+head(mbta6)
+```
+
+
+##By looking at the data entries in the column "Boat", we can see that there seems to be an obvious data entry error here - Easily seen with a histogram
+```{r, echo=FALSE}
+hist(mbta6$Boat)
+```
+
+##Now to deal with this entry error-
+##First find out the row in which this erroneus entry is present and replace the "40" with a "4"
+```{r, echo=FALSE}
+i <- which(mbta6$Boat == 40)
+mbta6$Boat[i] <- 4
+```
+
+##Now generate a histogram of Boat column
+```{r, echo=FALSE}
+hist(mbta6$Boat)
+```
+
+##Now that our data is clean lets compare the messy data we got and the clean data, there is quite a lot of visible difference
+```{r, echo=FALSE}
+head(mbta)
+head(mbta6)
+```
+
+
+##Now lets do some visualizations to finally present the clean data
+##Look at Boat and Trackless Trolley ridership over time
+```{r, echo=FALSE}
+mbta_boat <- subset(mbta4, mbta4$mode == "Boat" | mbta4$mode == "Trackless Trolley")
+
+ggplot(mbta_boat, aes(x = month, y = thousand_riders, col = mode)) +  
+  geom_point() + 
+  scale_x_discrete(name = "Month", breaks = c("2007-01", "2008-01", "2009-01", "2010-01", "2011-01")) +        scale_y_continuous(name = "Avg Weekday Ridership (thousands)")
+```
+
+##Look at all T ridership over time
+```{r, echo=FALSE}
+ggplot(mbta4, aes(x = month, y = thousand_riders, col = mode)) + geom_point() + 
+  scale_x_discrete(name = "Month", breaks = c("2007-01", "2008-01", "2009-01", "2010-01", "2011-01")) +  
+  scale_y_continuous(name = "Avg Weekday Ridership (thousands)")
+```
+
+
