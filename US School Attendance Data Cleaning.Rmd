@@ -68,7 +68,7 @@ att5 <- att4[-(1:2),]
 colnames(att5)
 ```
 
-##One of the chafracteristic of this messy data is that in gthe state names, extra characters have been added to make the length of all the state names to be same. We need to remove those extra characters to make the data useful for us
+##One of the characteristic of this messy data is that in gthe state names, extra characters have been added to make the length of all the state names to be same. We need to remove those extra characters to make the data useful for us
 ```{r}
 # Remove all periods in state column
 att5$state <- str_replace_all(att5$state, "\\.", "")
